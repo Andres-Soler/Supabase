@@ -1,60 +1,59 @@
 // src/login.js
 import { supabase } from './supabase.js';
-import { mostrarRegistro } from './register.js'; // para poder ir al registro
+import { mostrarRegistro } from './register.js';
+import { mostrarUser } from './user.js'; // si quieres redirigir después
 
 export function mostrarLogin() {
-const app = document.getElementById('app');
-app.innerHTML = `
-<section>
-<h2>Iniciar Sesión</h2>
-<form id="login-form">
-<input type="email" name="correo" placeholder="Correo" required
-/>
-<input type="password" name="password" placeholder="Contraseña"
-required />
-<button type="submit">Ingresar</button>
-</form>
-<p id="error" style="color:red;"></p>
-<button id="ir-registro">Crear cuenta</button>
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <section>
+      <h2>Iniciar Sesión</h2>
+      <form id="login-form">
+        <input type="email" name="correo" placeholder="Correo" required />
+        <input type="password" name="password" placeholder="Contraseña" required />
+        <button type="submit">Ingresar</button>
+      </form>
+      <p id="error" style="color:red;"></p>
+      <button id="ir-registro">Crear cuenta</button>
+    </section>
+  `;
 
-</section>
-`;
+  const form = document.getElementById('login-form');
+  const errorMsg = document.getElementById('error');
+  const irRegistro = document.getElementById('ir-registro');
 
-const form = document.getElementById('login-form');
-const errorMsg = document.getElementById('error');
-const irRegistro = document.getElementById('ir-registro');
+  irRegistro.addEventListener('click', () => mostrarRegistro());
 
-// Ir al registro
-irRegistro.addEventListener('click', () => {
-mostrarRegistro();
-});
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorMsg.textContent = '';
 
-// Enviar login
-form.addEventListener('submit', async (e) => {
-errorMsg.textContent = '';
-e.preventDefault();
-const correo = form.correo.value.trim();
-const password = form.password.value.trim();
+    const correo = form.correo.value.trim();
+    const password = form.password.value.trim();
 
-if (!correo || !password) {
-errorMsg.textContent = 'Por favor completa todos los campos.';
-return;
-}
+    if (!correo || !password) {
+      errorMsg.textContent = 'Por favor completa todos los campos.';
+      return;
+    }
 
-// 🔐 Iniciar sesión en Supabase
-const { data, error } = await supabase.auth.signInWithPassword({
-email: correo,
-password: password,
-});
+    console.log("Intentando login con:", correo, password);
 
-if (error) {
-errorMsg.textContent = 'Error al iniciar sesión: ' + error.message;
-return;
-}
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: correo,
+      password: password,
+    });
 
-// ✅ Usuario autenticado
+    console.log("Respuesta Supabase:", data, error);
 
-const usuario = data.user;
-console.log('Usuario logueado:', usuario);
-});
+    if (error) {
+      errorMsg.textContent = 'Error al iniciar sesión: ' + error.message;
+      return;
+    }
+
+    const usuario = data.user;
+    if (usuario) {
+      app.innerHTML = `<p>✅ Bienvenido, ${usuario.email}</p>`;
+      // mostrarUser(); // o la vista que corresponda
+    }
+  });
 }

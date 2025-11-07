@@ -1,3 +1,11 @@
+import { mostrarRegistro } from './register.js';
+import { mostrarLogin } from './login.js';
+import { mostrarMVP } from './mvp.js';
+import { mostrarUser } from './user.js';
+import { mostrarAdmin } from './admin.js';
+import { supabase } from './supabase.js';
+
+
 // Funciones de navegación disponibles para ser llamadas
 const routes = {
   'registro': mostrarRegistro,
@@ -15,11 +23,19 @@ async function CerrarSesion() {
 }
 
 // 🧩 Control de navegación según el estado del usuario
-export async function cargarMenu() { // Exportar por si se necesita desde CerrarSesion
-  const menu = document.getElementById("menu");
-  const { data: { user } } = await supabase.auth.getUser();
+export async function cargarMenu() {
 
-  // 🔹 Si NO hay usuario logueado
+  let menu = document.getElementById("menu");
+  if (!menu) {
+    menu = document.createElement("div");
+    menu.id = "menu";
+    document.body.appendChild(menu);
+  }
+
+  const { data, error } = await supabase.auth.getUser();
+  if (error) console.error("Error al obtener usuario:", error);
+  const user = data?.user;
+
   if (!user) {
     menu.innerHTML = `
       <div>
@@ -28,25 +44,23 @@ export async function cargarMenu() { // Exportar por si se necesita desde Cerrar
       </div>
     `;
   } else {
-    // Asumiendo que quieres mostrar 'admin' si es un administrador
     menu.innerHTML = `
       <div>
         <button data-action="actividades">Actividades</button>
         <button data-action="usuarios">Usuarios</button>
         <button data-action="logout">Cerrar sesión</button>
-        ${user.email === 'admin@mail.com' ? '<button data-action="admin">Admin</button>' : ''}
+        ${user?.email === 'admin@mail.com' ? '<button data-action="admin">Admin</button>' : ''}
       </div>
     `;
   }
 
-  // 🌟 ASIGNACIÓN DE EVENT LISTENERS (La solución al problema)
+  // 🌟 ASIGNAR EVENTOS A TODOS LOS BOTONES
   menu.querySelectorAll('button').forEach(button => {
     const action = button.getAttribute('data-action');
     if (action === 'logout') {
-      button.addEventListener('click', CerrarSesion);
+      button.addEventListener('click', () => CerrarSesion());
     } else if (routes[action]) {
-      // Asigna la función importada correspondiente al evento
-      button.addEventListener('click', routes[action]);
+      button.addEventListener('click', () => routes[action]());
     }
   });
 }

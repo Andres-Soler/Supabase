@@ -55,5 +55,7 @@ export function mostrarLogin() {
       app.innerHTML = `<p>✅ Bienvenido, ${usuario.email}</p>`;
       // mostrarUser(); // o la vista que corresponda
     }
+
+    location.reload()
   });
 }
